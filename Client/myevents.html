@@ -1,0 +1,135 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Events</title>
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      .event-card {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="#">My Events</a>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="event.html">Events</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container mt-5">
+      <h1 class="text-center">My Events</h1>
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <h3 class="text-center">Requested Events</h3>
+          <div id="requestedEventsList">
+            <!-- Requested events will be dynamically added here -->
+          </div>
+        </div>
+        <div class="col-md-6">
+          <h3 class="text-center">Joined Events</h3>
+          <div id="joinedEventsList">
+            <!-- Joined events will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Fetch the user's data using the authenticated user ID
+      const token = getCookie("token");
+      fetch("http://localhost:8080/users/me", {
+        headers: {
+          Authorization: token,
+        },
+      })
+        .then((response) => response.json())
+        .then((user) => {
+          // Call the functions to populate the requested and joined events
+          populateRequestedEvents(user.requestedEvents);
+          populateJoinedEvents(user.joinedEvents);
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+          displayError("Error fetching user data");
+        });
+
+      // Function to create an event card
+      function createEventCard(event) {
+        const card = document.createElement("div");
+        card.className = "card event-card";
+        card.innerHTML = `
+        <div class="card-body">
+          <h5 class="card-title">${event.title}</h5>
+          <p class="card-text">${event.description}</p>
+          <p class="card-text">Timing: ${event.timings}</p>
+          <p class="card-text">Player Limit: ${event.playerLimit}</p>
+        </div>
+      `;
+        return card;
+      }
+
+      // Function to populate requested events
+      function populateRequestedEvents(requestedEvents) {
+        const requestedEventsList = document.getElementById(
+          "requestedEventsList"
+        );
+        requestedEvents.forEach((event) => {
+          const card = createEventCard(event);
+          requestedEventsList.appendChild(card);
+        });
+      }
+
+      // Function to populate joined events
+      function populateJoinedEvents(joinedEvents) {
+        const joinedEventsList = document.getElementById("joinedEventsList");
+        joinedEvents.forEach((event) => {
+          const card = createEventCard(event);
+          joinedEventsList.appendChild(card);
+        });
+      }
+
+      // Function to display an error message
+      function displayError(message) {
+        const errorContainer = document.createElement("div");
+        errorContainer.className = "alert alert-danger";
+        errorContainer.textContent = message;
+        document.body.appendChild(errorContainer);
+      }
+      function getCookie(name) {
+        const cookies = document.cookie.split("; ");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].split("=");
+          if (cookie[0] === name) {
+            return cookie[1];
+          }
+        }
+        return null;
+      }
+
+      function deleteCookie(name) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
+
+      function logout() {
+        deleteCookie("token");
+        window.location.href = "./login.html";
+      }
+    </script>
+  </body>
+</html>

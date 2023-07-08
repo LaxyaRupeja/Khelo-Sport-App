@@ -1,0 +1,32 @@
+body {
+    background-color: #f8f9fa;
+  }
+  
+  .container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .card {
+    width: 100%;
+  }
+  
+  .card-header .nav-link {
+    cursor: pointer;
+  }
+  
+  .card-body {
+    padding: 2rem;
+  }
+  
+  .invalid-feedback {
+    display: none;
+    color: red;
+  }
+  
+  .tab-pane .card-title {
+    margin-bottom: 1rem;
+  }
+  

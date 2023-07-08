@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Events</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@10.0.0/dist/sweetalert2.min.css"
+    />
+    <style>
+      .event-card {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark bg-dark">
+      <a class="navbar-brand" href="./event.html">Events</a>
+      <button
+        class="btn btn-primary"
+        data-toggle="modal"
+        data-target="#createEventModal"
+      >
+        Create New Event
+      </button>
+    </nav>
+
+    <div class="container mt-4">
+      <div id="event-list"></div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div
+      class="modal fade"
+      id="createEventModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="createEventModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createEventModalLabel">
+              Create New Event
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="createEventForm">
+              <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" class="form-control" id="title" required />
+              </div>
+              <div class="form-group">
+                <label for="description">Description</label>
+                <textarea
+                  class="form-control"
+                  id="description"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              <div class="form-group">
+                <label for="timings">Timings</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  id="timings"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="playerLimit">Player Limit</label>
+                <input
+                  type="range"
+                  class="form-control-range"
+                  id="playerLimit"
+                  min="1"
+                  max="50"
+                  required
+                />
+                <span id="playerLimitValue">1</span>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Create Event
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.0.0/dist/sweetalert2.min.js"></script>
+    <script>
+      // Fetch events data from the server
+      function fetchEvents() {
+        axios
+          .get("http://localhost:8080/event/organizer", {
+            headers: {
+              Authorization: getCookie("token"),
+            },
+          })
+          .then((response) => {
+            const events = response.data.AllHostEvents;
+            displayEvents(events);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      // Display events on the page
+      function displayEvents(events) {
+        const eventList = document.getElementById("event-list");
+
+        events.forEach((event) => {
+          const eventCard = document.createElement("div");
+          eventCard.className = "card event-card";
+          eventCard.setAttribute("data-event-id", event._id);
+          const cardBody = document.createElement("div");
+          cardBody.className = "card-body";
+
+          const title = document.createElement("h5");
+          title.className = "card-title";
+          title.textContent = event.title;
+
+          const description = document.createElement("p");
+          description.className = "card-text";
+          description.textContent = event.description;
+
+          const timings = document.createElement("p");
+          timings.className = "card-text";
+          timings.textContent = `Timings: ${new Date(
+            event.timings
+          ).toLocaleString()}`;
+
+          const playerLimit = document.createElement("p");
+          playerLimit.className = "card-text";
+          playerLimit.textContent = `Player Limit: ${event.playerLimit}`;
+
+          const players = document.createElement("p");
+          players.className = "card-text";
+          players.textContent = `Joined Players: ${event.players.length}`;
+          const playersReq = document.createElement("p");
+          playersReq.className = "card-text";
+          playersReq.textContent = `Players Requests: ${event.requests.length}`;
+
+          const requestButton = document.createElement("button");
+          requestButton.className = "btn btn-primary";
+          requestButton.textContent = "View Requests";
+          requestButton.addEventListener("click", () => {
+            viewRequests(event);
+          });
+
+          cardBody.appendChild(title);
+          cardBody.appendChild(description);
+          cardBody.appendChild(timings);
+          cardBody.appendChild(playerLimit);
+          cardBody.appendChild(players);
+          cardBody.appendChild(playersReq);
+          cardBody.appendChild(requestButton);
+
+          eventCard.appendChild(cardBody);
+          eventList.appendChild(eventCard);
+          //   eventList.appendChild(eventCard);
+        });
+      }
+
+      // Display requests for an event
+      // Display requests for an event as a modal
+      // Display requests for an event as a modal
+      function viewRequests(event) {
+        const eventId = event._id;
+        const eventCard = document.querySelector(
+          `[data-event-id="${eventId}"]`
+        ); // Use data-event-id attribute selector
+
+        // Check if modal already exists
+        const existingModal = eventCard.querySelector(".modal");
+        if (existingModal) {
+          $(existingModal).modal("toggle"); // Hide the existing modal
+          return;
+        }
+
+        const modal = document.createElement("div");
+        modal.className = "modal fade"; // Add 'fade' class for animation
+        modal.tabIndex = -1; // Add tabindex for keyboard accessibility
+        modal.innerHTML = `
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Requests</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          ${
+            event.requests.length === 0
+              ? "<p>No requests found.</p>"
+              : `<div class="requests">
+              ${event.requests
+                .map(
+                  (request) => `
+                <div class="card mb-2">
+                  <div class="card-body">
+                    <h6 class="card-title">${request.username}</h6>
+                    <button class="btn btn-success mr-2" onclick="handleRequest('${request._id}', '${eventId}', 'accept')">Accept</button>
+                    <button class="btn btn-danger" onclick="handleRequest('${request._id}', '${eventId}', 'reject')">Reject</button>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>`
+          }
+        </div>
+      </div>
+    </div>
+  `;
+
+        eventCard.appendChild(modal);
+
+        $(modal).modal("show"); // Show the newly created modal
+
+        $(modal).on("shown.bs.modal", function () {
+          $(this).addClass("modal-open"); // Add 'modal-open' class to enable fade-in animation
+        });
+
+        $(modal).on("hidden.bs.modal", function () {
+          $(this).removeClass("modal-open"); // Remove 'modal-open' class when modal is closed
+        });
+      }
+
+      // Handle request acceptance or
+
+      function handleRequest(userId, eventId, action) {
+        const token = "YOUR_TOKEN"; // Replace with your actual token
+
+        axios
+          .put(
+            `http://localhost:8080/events/${eventId}/requests/${userId}/${action}`,
+            {},
+            {
+              headers: {
+                Authorization: getCookie("token"),
+              },
+            }
+          )
+          .then((response) => {
+            console.log(response.data); // Handle the response accordingly
+            fetchEvents(); // Refresh the events after handling the request
+            Swal.fire({
+              title: "Request Accepted",
+              icon: "success",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            updateModal(eventId);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+      function updateModal(eventId) {
+        const modal = document.querySelector(
+          `[data-event-id="${eventId}"] .modal`
+        ); // Get the modal for the specific event
+
+        // Check if modal exists
+        if (modal) {
+          const modalBody = modal.querySelector(".modal-body");
+
+          // Fetch the updated event data
+          axios
+            .get(`http://localhost:8080/events/${eventId}`, {
+              headers: {
+                Authorization: getCookie("token"),
+              },
+            })
+            .then((response) => {
+              const event = response.data;
+              console.log(event);
+              modalBody.innerHTML = `
+          <div class="requests">
+            ${event.requests
+              .map(
+                (request) => `
+              <div class="card mb-2">
+                <div class="card-body">
+                  <h6 class="card-title">${request.username}</h6>
+                  <button class="btn btn-success mr-2" onclick="handleRequest('${request._id}', '${eventId}', 'accept')">Accept</button>
+                  <button class="btn btn-danger" onclick="handleRequest('${request._id}', '${eventId}', 'reject')">Reject</button>
+                </div>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        `;
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        }
+      }
+
+      function handleCreateEventForm(event) {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+        const timings = document.getElementById("timings").value;
+        const playerLimit = document.getElementById("playerLimit").value;
+
+        const token = "YOUR_TOKEN"; // Replace with your actual token
+
+        axios
+          .post(
+            "http://localhost:8080/events",
+            {
+              title,
+              description,
+              timings,
+              playerLimit,
+            },
+            {
+              headers: {
+                Authorization: getCookie("token"),
+              },
+            }
+          )
+          .then((response) => {
+            Swal.fire({
+              title: "Event Created",
+              icon: "success",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            fetchEvents();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+
+        $("#createEventModal").modal("hide");
+      }
+      // Fetch events on page load
+      window.addEventListener("DOMContentLoaded", () => {
+        fetchEvents();
+        const createEventForm = document.getElementById("createEventForm");
+        createEventForm.addEventListener("submit", handleCreateEventForm);
+
+        const playerLimitRange = document.getElementById("playerLimit");
+        const playerLimitValue = document.getElementById("playerLimitValue");
+
+        playerLimitRange.addEventListener("input", function () {
+          playerLimitValue.textContent = playerLimitRange.value;
+        });
+      });
+      function getCookie(name) {
+        const cookies = document.cookie.split("; ");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].split("=");
+          if (cookie[0] === name) {
+            return cookie[1];
+          }
+        }
+        return null;
+      }
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  </body>
+</html>
