@@ -21,7 +21,7 @@ Khelo-Sport-App is a web application that allows users to organize and participa
 
 ## Installation
 
-1. Clone the repository: `git clone [repository_url]`
+1. Clone the repository: `git clone https://github.com/LaxyaRupeja/Khelo-Sport-App.git`
 2. Install dependencies: `npm install`
 3. Set up environment variables:
    - Create one `.env`.
